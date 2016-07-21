@@ -4,7 +4,7 @@
             [edn-ld.jena :refer :all]
             [edn-ld.common :refer [rdf xsd]])
   (:import (org.apache.jena.riot Lang)
-           (com.hp.hpl.jena.rdf.model ModelFactory)))
+           (org.apache.jena.rdf.model ModelFactory)))
 
 (deftest test-formats
   (are [x y] (= (get-format x) y)

@@ -1,16 +1,18 @@
 (ns edn-ld.core-test
   (:require [clojure.test :refer :all]
             [clojure.string :as string]
-            [schema.core :as s]
             [edn-ld.core :refer :all]
-            [edn-ld.common :refer [rdf xsd]]))
+            [edn-ld.common :refer [rdf xsd]]
+            [schema.core :as s]
+            [schema.macros :as sm]
+            [schema.spec.core :as spec]))
 
-; These macros are borrowed from
-; https://github.com/Prismatic/schema/blob/master/test/clj/schema/test_macros.clj
+;; These macros are borrowed from
+;; https://github.com/Prismatic/schema/blob/master/test/clj/schema/test_macros.clj
 (defmacro valid!
   "Assert that x satisfies schema s, and the walked value is equal to the original."
   [s x]
-  `(let [x# ~x] (~'is (= x# ((s/start-walker s/walker ~s) x#)))))
+  `(let [x# ~x] (~'is (= x# ((spec/run-checker #(spec/checker (s/spec %1) %2) true ~s) x#)))))
 
 (defmacro invalid!
   "Assert that x does not satisfy schema s, optionally checking the stringified return value"
@@ -19,6 +21,12 @@
   ([s x expected]
    `(do (invalid! ~s ~x)
         (sm/if-cljs nil (~'is (= ~expected (pr-str (s/check ~s ~x))))))))
+
+(defmacro invalid-call!
+  "Assert that f throws (presumably due to schema validation error) when called on args."
+  [f & args]
+  (when (sm/compile-fn-validation? &env f)
+    `(~'is (~'thrown? ~'Throwable (~f ~@args)))))
 
 ;; For now, any string is a valid IRI.
 
